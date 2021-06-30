@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: coturn
+  name: coturn
+  labels:
+    app.kubernetes.io/name: coturn
+    app.kubernetes.io/instance: coturn
+    app.kubernetes.io/version: 0.0.1
+spec:
+  # replicas: 1
+  selector:
+    matchLabels:
+          app.kubernetes.io/name: coturn
+          app.kubernetes.io/instance: coturn
+          app.kubernetes.io/version: 0.0.1
+  template:
+    metadata:
+      labels:
+            app.kubernetes.io/name: coturn
+            app.kubernetes.io/instance: coturn
+            app.kubernetes.io/version: 0.0.1
+    spec:
+      hostNetwork: true
+      # securityContext:
+      #   runAsUser: 1000
+      #   runAsGroup: 1000
+      containers:
+        - name: coturn
+          image: coturn/coturn
+          imagePullPolicy: Always
+          ports:
+            # - name: turn-udp
+            #   containerPort: 3000
+            #   protocol: UDP
+            - name: turn-port1
+              containerPort: 3478
+              hostPort: 3478
+              protocol: UDP
+            - name: turn-port2
+              containerPort: 3478
+              hostPort: 3478
+              protocol: TCP
+          # securityContext:
+          #   capabilities:
+          #     drop:
+          #       - ALL
+            # readOnlyRootFilesystem: true
+            # allowPrivilegeEscalation: false
+          args:
+          #   - --stun-only
+            - -v
+
+--- 
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: coturn
+  namespace: coturn
+  labels:
+       app.kubernetes.io/name: coturn
+       app.kubernetes.io/instance: coturn
+       app.kubernetes.io/version: 0.0.1
+spec:
+  type: ClusterIP
+  ports:
+    # - port: 3000
+    #   targetPort: 3000
+    #   protocol: UDP
+    #   name: turn-udp
+    - port: 3478
+      targetPort: 3478
+      protocol: UDP
+      name: turn-port1
+    - port: 3478
+      targetPort: 3478
+      protocol: TCP
+      name: turn-port2
+    # - port: 3478
+    #   targetPort: 3478
+    #   protocol: TCP
+    #   name: turn-port3
+    # - port: 3479
+    #   targetPort: 3479
+    #   protocol: TCP
+    #   name: turn-port4
+    
+  selector:
+       app.kubernetes.io/name: coturn
+       app.kubernetes.io/instance: coturn
+       app.kubernetes.io/version: 0.0.1
